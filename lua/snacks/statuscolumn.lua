@@ -181,21 +181,30 @@ function M._get()
   local nu = vim.wo[win].number
   local rnu = vim.wo[win].relativenumber
   local show_signs = vim.v.virtnum == 0 and vim.wo[win].signcolumn ~= "no"
-  local components = { "", "", "" } -- left, middle, right
+
+  local components_left_index = 1
+  local components_right_index = 3
+  local components = {}
+  if nu and rnu then
+    components = { "", "", "", "" } -- left, lnum, rnum, right
+    components_right_index = 4 -- shift the right index
+  else
+    components = { "", "", "" } -- left, middle, right
+  end
+
   if not (show_signs or nu or rnu) then
     return ""
   end
 
   if (nu or rnu) and vim.v.virtnum == 0 then
-    local num ---@type number
-    if rnu and nu and vim.v.relnum == 0 then
-      num = vim.v.lnum
+    if rnu and nu then
+      components[2] = "%=" .. vim.v.lnum .. " "
+      components[3] = "%=" .. vim.v.relnum .. " "
     elseif rnu then
-      num = vim.v.relnum
+      components[2] = "%=" .. vim.v.relnum .. " "
     else
-      num = vim.v.lnum
+      components[2] = "%=" .. vim.v.lnum .. " "
     end
-    components[2] = "%=" .. num .. " "
   end
 
   if show_signs then
@@ -231,11 +240,11 @@ function M._get()
           right.texthl = git.texthl
         end
       end
-      components[1] = left and M.icon(left) or "  " -- left
-      components[3] = is_file and (right and M.icon(right) or "  ") or "" -- right
+      components[components_left_index] = left and M.icon(left) or "  " -- left
+      components[components_right_index] = is_file and (right and M.icon(right) or "  ") or "" -- right
     else
-      components[1] = "  "
-      components[3] = is_file and "  " or ""
+      components[components_left_index] = "  "
+      components[components_right_index] = is_file and "  " or ""
     end
   end
 
